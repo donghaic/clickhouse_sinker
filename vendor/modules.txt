@@ -69,6 +69,8 @@ github.com/pmezard/go-difflib/difflib
 github.com/rcrowley/go-metrics
 # github.com/robinjoseph08/redisqueue v1.0.1
 github.com/robinjoseph08/redisqueue
+# github.com/ssgreg/repeat v1.4.1
+github.com/ssgreg/repeat
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 # github.com/tidwall/gjson v1.1.3

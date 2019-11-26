@@ -17,6 +17,7 @@ require (
 	github.com/pierrec/lz4 v0.0.0-20190507090305-b8e3f78e075c // indirect
 	github.com/robinjoseph08/redisqueue v1.0.1
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
+	github.com/ssgreg/repeat v1.4.1
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/gjson v1.1.3
 	github.com/tidwall/match v1.0.0 // indirect

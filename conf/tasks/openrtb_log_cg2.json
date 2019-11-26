@@ -10,7 +10,6 @@
   "excludeColumns": [
   ],
   "bufferSize": 2000,
-  "name": "cg_2",
-  "consumerGroup": "cg_2",
-  "concurrency": 8
+  "name": "ssp_res",
+  "concurrency": 10
 }

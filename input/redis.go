@@ -4,21 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-redis/redis"
-	"github.com/robinjoseph08/redisqueue"
+	"github.com/housepower/clickhouse_sinker/input/ami"
 	"github.com/wswz/go_commons/log"
 	"sync"
 	"time"
 )
 
+type errorLogger struct{}
+
+func (l *errorLogger) AmiError(err error) {
+	log.Error("Got error from Ami:", err.Error())
+}
+
 type Redis struct {
-	consumer *redisqueue.Consumer
+	consumer *ami.Consumer
 	stopped  chan struct{}
 	msgs     chan ([]byte)
 
 	Topic         string
 	BufferSize    int
-	Concurrency   int
-	ConsumerGroup string
+	Concurrency   int8
+	PrefetchCount int64
 	Name          string
 	// redis
 	Addr               string
@@ -49,50 +55,38 @@ func (k *Redis) Init() error {
 	k.msgs = make(chan []byte, 300000)
 	k.stopped = make(chan struct{})
 
-	//consumerOptions := &redisqueue.ConsumerOptions{
-	//	GroupName:         k.ConsumerGroup,
-	//	Name:              k.Name,
-	//	VisibilityTimeout: 60 * time.Second,
-	//	BlockingTimeout:   5 * time.Second,
-	//	ReclaimInterval:   1 * time.Second,
-	//	BufferSize:        k.BufferSize,
-	//	Concurrency:       k.Concurrency,
-	//	RedisOptions: &redis.Options{
-	//		Addr:       k.Addr,
-	//		Password:   k.Password,
-	//		MaxRetries: 3,
-	//		PoolSize:   k.PoolSize,
-	//	},
-	//}
-	//c, err := redisqueue.NewConsumerWithOptions(consumerOptions)
-
-	log.Info("GroupName----", k.ConsumerGroup)
 	log.Info("Name----", k.Name)
 	log.Info("Concurrency----", k.Concurrency)
 	log.Info("Addr----", k.Addr)
 	log.Info("Password----", k.Password)
 	log.Info("PoolSize----", k.PoolSize)
 
-	c, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
-		GroupName:         k.ConsumerGroup,
-		Name:              k.Name,
-		VisibilityTimeout: 60 * time.Second,
-		BlockingTimeout:   5 * time.Second,
-		ReclaimInterval:   1 * time.Second,
-		BufferSize:        k.BufferSize,
-		Concurrency:       k.Concurrency,
-		RedisOptions: &redis.Options{
-			Addr:     k.Addr,
-			Password: k.Password,
-			PoolSize: k.PoolSize,
+	consumer, err := ami.NewConsumer(
+		ami.ConsumerOptions{
+			Consumer:          k.Name,
+			ErrorNotifier:     &errorLogger{},
+			Name:              k.Topic,
+			PendingBufferSize: 10000000,
+			PipeBufferSize:    50000,
+			PipePeriod:        time.Microsecond * 1000,
+			PrefetchCount:     k.PrefetchCount,
+			ShardsCount:       k.Concurrency,
 		},
-	})
+		&redis.Options{
+			Addr:         k.Addr,
+			ReadTimeout:  time.Second * 60,
+			WriteTimeout: time.Second * 60,
+			Password:     k.Password,
+			PoolSize:     k.PoolSize,
+		},
+	)
+
 	if err != nil {
 		log.Info("init redis error. %s", err.Error())
 		return err
 	}
 
-	k.consumer = c
+	k.consumer = consumer
 	k.context, k.cancel = context.WithCancel(context.Background())
 	return nil
 }
@@ -103,17 +97,18 @@ func (k *Redis) Msgs() chan []byte {
 func (k *Redis) Start() error {
 
 	log.Info(" Register topic = ", k.Topic)
-	k.consumer.Register(k.Topic, k.process)
+	c := k.consumer.Start()
 	go func() {
-		for err := range k.consumer.Errors {
-			// handle errors accordingly
-			log.Error("process err: ", err.Error())
+		for {
+			m, more := <-c
+			if !more {
+				time.Sleep(time.Second * 2)
+				continue
+			}
+			k.msgs <- []byte(m.Body)
+			k.consumer.Ack(m)
 		}
 	}()
-
-	log.Info("consumer starting")
-	go k.consumer.Run()
-	log.Info("consumer Run")
 	return nil
 }
 
@@ -121,16 +116,7 @@ func (k *Redis) Stop() error {
 	k.cancel()
 	k.wg.Wait()
 
-	k.consumer.Shutdown()
+	k.consumer.Close()
 	close(k.msgs)
-	return nil
-}
-
-func (k *Redis) process(msg *redisqueue.Message) error {
-	v, ok := msg.Values["m"]
-	if ok {
-		body := v.(string)
-		k.msgs <- []byte(body)
-	}
 	return nil
 }
