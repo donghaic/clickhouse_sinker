@@ -1,17 +1,16 @@
 {
-  "name": "api_request",
   "redis": "redis1",
-  "topic": "real_time",
-  "earliest": true,
-  "consumerGroup": "testgroup",
+  "topic": "queue:logs:res",
   "parser": "json",
   "clickhouse": "ch1",
-  "tableName": "api_request",
+  "tableName": "ssp_res_raw",
   "@desc_of_autoSchema": "auto schema will auto fetch the schema from clickhouse",
   "autoSchema": true,
   "@desc_of_exclude_columns": "this columns will be excluded by insert SQL ",
   "excludeColumns": [
-    "date"
   ],
-  "bufferSize": 90000
-} 
+  "bufferSize": 2000,
+  "name": "res-1",
+  "consumerGroup": "g2",
+  "concurrency": 8
+}

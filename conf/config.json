@@ -2,33 +2,23 @@
   "clickhouse": {
     "ch1": {
       "db": "default",
-      "host": "127.0.0.1",
-      "maxLifeTime": 300,
-      "password": "",
-      "retryTimes" : 5,
+      "host": "192.168.6.181",
       "port": 9000,
-      "username": ""
-    }
-  },
-  "kafka": {
-    "kfk1": {
-      "brokers": "127.0.0.1:9092",
-      "sasl": {
-        "password": "",
-        "username": ""
-      }
+      "dnsLoop": false,
+      "maxLifeTime": 300,
+      "username": "default",
+      "password": "426a68094564a6b7d12e226af5b784abffcb3d8bacd1e11f8b13c97c278a7e98"
     }
   },
   "redis": {
     "redis1": {
-      "addr": "127.0.0.1:6379",
+      "addr": "192.168.6.181:6379",
       "poolSize": 12
     }
   },
   "common": {
     "bufferSize": 90000,
-    "minBufferSize": 2000,
-    "flushInterval": 5,
+    "flushInterval": 60,
     "logLevel": "info"
   }
 }

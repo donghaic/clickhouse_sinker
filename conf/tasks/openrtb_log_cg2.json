@@ -1,0 +1,16 @@
+{
+  "redis": "redis1",
+  "topic": "queue:logs:res",
+  "parser": "json",
+  "clickhouse": "ch1",
+  "tableName": "ssp_res_raw",
+  "@desc_of_autoSchema": "auto schema will auto fetch the schema from clickhouse",
+  "autoSchema": true,
+  "@desc_of_exclude_columns": "this columns will be excluded by insert SQL ",
+  "excludeColumns": [
+  ],
+  "bufferSize": 2000,
+  "name": "cg_2",
+  "consumerGroup": "cg_2",
+  "concurrency": 8
+}

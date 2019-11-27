@@ -3,7 +3,6 @@ package input
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/robinjoseph08/redisqueue"
 	"github.com/wswz/go_commons/log"
@@ -50,7 +49,31 @@ func (k *Redis) Init() error {
 	k.msgs = make(chan []byte, 300000)
 	k.stopped = make(chan struct{})
 
-	consumerOptions := &redisqueue.ConsumerOptions{
+	//consumerOptions := &redisqueue.ConsumerOptions{
+	//	GroupName:         k.ConsumerGroup,
+	//	Name:              k.Name,
+	//	VisibilityTimeout: 60 * time.Second,
+	//	BlockingTimeout:   5 * time.Second,
+	//	ReclaimInterval:   1 * time.Second,
+	//	BufferSize:        k.BufferSize,
+	//	Concurrency:       k.Concurrency,
+	//	RedisOptions: &redis.Options{
+	//		Addr:       k.Addr,
+	//		Password:   k.Password,
+	//		MaxRetries: 3,
+	//		PoolSize:   k.PoolSize,
+	//	},
+	//}
+	//c, err := redisqueue.NewConsumerWithOptions(consumerOptions)
+
+	log.Info("GroupName----", k.ConsumerGroup)
+	log.Info("Name----", k.Name)
+	log.Info("Concurrency----", k.Concurrency)
+	log.Info("Addr----", k.Addr)
+	log.Info("Password----", k.Password)
+	log.Info("PoolSize----", k.PoolSize)
+
+	c, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
 		GroupName:         k.ConsumerGroup,
 		Name:              k.Name,
 		VisibilityTimeout: 60 * time.Second,
@@ -59,29 +82,11 @@ func (k *Redis) Init() error {
 		BufferSize:        k.BufferSize,
 		Concurrency:       k.Concurrency,
 		RedisOptions: &redis.Options{
-			Addr:       k.Addr,
-			Password:   k.Password,
-			MaxRetries: 3,
-			PoolSize:   k.PoolSize,
+			Addr:     k.Addr,
+			Password: k.Password,
+			PoolSize: k.PoolSize,
 		},
-	}
-
-	log.Info("----", consumerOptions.GroupName)
-	log.Info("----", consumerOptions.Name)
-	log.Info("Addr----", consumerOptions.RedisOptions.Addr)
-	log.Info("PoolSize----", consumerOptions.RedisOptions.PoolSize)
-
-	c, err := redisqueue.NewConsumerWithOptions(consumerOptions)
-
-	//c, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
-	//	GroupName:         "cg_2",
-	//	Name:              "res",
-	//	VisibilityTimeout: 60 * time.Second,
-	//	BlockingTimeout:   5 * time.Second,
-	//	ReclaimInterval:   1 * time.Second,
-	//	BufferSize:        100,
-	//	Concurrency:       1,
-	//})
+	})
 	if err != nil {
 		log.Info("init redis error. %s", err.Error())
 		return err
@@ -97,12 +102,12 @@ func (k *Redis) Msgs() chan []byte {
 }
 func (k *Redis) Start() error {
 
-	log.Info(" Register %s", k.Topic)
+	log.Info(" Register topic = ", k.Topic)
 	k.consumer.Register(k.Topic, k.process)
 	go func() {
 		for err := range k.consumer.Errors {
 			// handle errors accordingly
-			fmt.Printf("err: %+v\n", err)
+			log.Error("process err: ", err.Error())
 		}
 	}()
 

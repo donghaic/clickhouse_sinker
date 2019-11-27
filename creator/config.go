@@ -160,8 +160,8 @@ type Task struct {
 	BufferSize    int `json:"bufferSize,omitempty"`
 	MinBufferSize int `json:"minBufferSize,omitempty"`
 
-
 	Redis       string
+	Concurrency int
 }
 
 var (
