@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/k0kubun/pp"
 	"github.com/wswz/go_commons/log"
@@ -13,6 +14,7 @@ import (
 
 type Config struct {
 	Kafka      map[string]*KafkaConfig
+	Redis      map[string]*RedisConfig
 	Clickhouse map[string]*ClickHouseConfig
 
 	Tasks []*Task
@@ -91,6 +93,19 @@ func Conf() Config {
 	return *baseConfig
 }
 
+type RedisConfig struct {
+	Network string
+	// host:port address.
+	Addr               string
+	Password           string
+	PoolSize           int
+	MinIdleConns       int
+	MaxConnAge         time.Duration
+	PoolTimeout        time.Duration
+	IdleTimeout        time.Duration
+	IdleCheckFrequency time.Duration
+}
+
 type KafkaConfig struct {
 	Brokers string
 	Sasl    struct {
@@ -144,6 +159,9 @@ type Task struct {
 	FlushInterval int `json:"flushInterval,omitempty"`
 	BufferSize    int `json:"bufferSize,omitempty"`
 	MinBufferSize int `json:"minBufferSize,omitempty"`
+
+
+	Redis       string
 }
 
 var (

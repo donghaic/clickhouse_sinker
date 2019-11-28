@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&config, "conf", "", "config dir")
+	flag.StringVar(&config, "conf", "./conf", "config dir")
 
 	flag.Parse()
 }

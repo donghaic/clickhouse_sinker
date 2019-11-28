@@ -17,7 +17,7 @@ import (
 
 type TaskService struct {
 	stopped    chan struct{}
-	kafka      *input.Kafka
+	input      input.Input
 	clickhouse *output.ClickHouse
 	p          parser.Parser
 
@@ -26,17 +26,17 @@ type TaskService struct {
 	MinBufferSize int
 }
 
-func NewTaskService(kafka *input.Kafka, clickhouse *output.ClickHouse, p parser.Parser) *TaskService {
+func NewTaskService(input input.Input, clickhouse *output.ClickHouse, p parser.Parser) *TaskService {
 	return &TaskService{
 		stopped:    make(chan struct{}),
-		kafka:      kafka,
+		input:      input,
 		clickhouse: clickhouse,
 		p:          p,
 	}
 }
 
 func (service *TaskService) Init() error {
-	err := service.kafka.Init()
+	err := service.input.Init()
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (service *TaskService) Init() error {
 }
 
 func (service *TaskService) Run() {
-	if err := service.kafka.Start(); err != nil {
+	if err := service.input.Start(); err != nil {
 		panic(err)
 	}
 
@@ -54,7 +54,7 @@ func (service *TaskService) Run() {
 FOR:
 	for {
 		select {
-		case msg, more := <-service.kafka.Msgs():
+		case msg, more := <-service.input.Msgs():
 			if !more {
 				break FOR
 			}
@@ -88,7 +88,7 @@ func (service *TaskService) flush(metrics []model.Metric) {
 
 func (service *TaskService) Stop() {
 	log.Info("close TaskService size:")
-	if err := service.kafka.Stop(); err != nil {
+	if err := service.input.Stop(); err != nil {
 		panic(err)
 	}
 	<-service.stopped

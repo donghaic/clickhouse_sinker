@@ -6,7 +6,7 @@
       "maxLifeTime": 300,
       "password": "",
       "retryTimes" : 5,
-      "port": 9900,
+      "port": 9000,
       "username": ""
     }
   },
@@ -17,6 +17,12 @@
         "password": "",
         "username": ""
       }
+    }
+  },
+  "redis": {
+    "redis1": {
+      "addr": "127.0.0.1:6379",
+      "poolSize": 12
     }
   },
   "common": {
